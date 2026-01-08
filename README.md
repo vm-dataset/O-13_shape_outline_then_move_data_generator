@@ -1,139 +1,191 @@
-# Template Data Generator 🎲
+# Shape Outline-Then-Move Task Generator
 
-A minimal template for creating synthetic reasoning task generators. Fork this and customize it for your own task (maze, sudoku, rotation, etc.).
+A specialized data generator for creating **two-step sequential visual reasoning tasks** where shapes undergo fill-to-outline transformation followed by vertical movement.
 
----
+## 🎯 Task Format
+
+This generator creates visual analogies in the **A→B→C :: D→?→?** format:
+
+- **Example Sequence (A→B→C)**: Shows the complete two-step transformation
+  - **A**: Original shape (e.g., filled circle at center position)
+  - **B**: After step 1 - fill-to-outline (e.g., outline circle at center position)  
+  - **C**: After step 2 - vertical movement (e.g., outline circle moved up)
+
+- **Question Sequence (D→?→?)**: User must solve both steps
+  - **D**: Original shape (e.g., filled square at center position)
+  - **First ?**: Apply step 1 - fill-to-outline (e.g., outline square at center position)
+  - **Second ?**: Apply step 2 - vertical movement (e.g., outline square moved up)
+
+## 🌟 Key Features
+
+### Sequential Two-Step Transformations
+- **Step 1**: Fill-to-outline transformation (filled → outline-only)
+- **Step 2**: Vertical movement (up/down by specified distances)
+- **Consistent Pattern**: Both example and question follow identical transformation sequence
+
+### Enhanced Visual Design
+- **Optimized Layout**: 800×400 image format for better horizontal spacing
+- **Improved Spacing**: 80% space for shapes, 20% for arrows to prevent overlap
+- **Clear Separation**: Proper margins between all visual elements
+- **Single Color Focus**: Blue color for all shapes to emphasize style and position changes
+
+### Rich Animation
+- **Two-Step Video**: Shows sequential revelation of both question marks
+- **Step 1 Animation**: First ? gradually converts from filled to outline (25 frames)
+- **Step 2 Animation**: Second ? gradually moves vertically (25 frames)
+- **Smooth Transitions**: Clear visual progression through transformation steps
+
+## 🎨 Visual Elements
+
+### Shapes
+- **10 Shape Types**: square, triangle, circle, diamond, pentagon, hexagon, rectangle, oval, star, heart
+- **Consistent Style**: All shapes use blue color with black outlines
+
+### Fill Styles
+- **Filled**: Full color fill with thin border (width=2)
+- **Outline**: No fill, thicker border (width=3) for clear distinction
+
+### Movement Options
+- **6 Movement Types**: 
+  - `up` (60px up), `down` (60px down)
+  - `up_small` (40px up), `down_small` (40px down)  
+  - `up_large` (80px up), `down_large` (80px down)
+- **Clear Displacement**: Easily distinguishable vertical position changes
 
 ## 🚀 Quick Start
 
+### Installation
 ```bash
-# 1. Clone the repository
-git clone https://github.com/your-org/your-task-generator.git
-cd your-task-generator
-
-# 2. Create and activate virtual environment
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# 3. Install dependencies
-pip install --upgrade pip
-pip install -r requirements.txt
 pip install -e .
-
-# 4. Generate tasks
-python examples/generate.py --num-samples 50
 ```
 
----
-
-## 📁 Structure
-
-```
-template-data-generator/
-├── core/                    # ✅ KEEP: Standard utilities
-│   ├── base_generator.py   # Abstract base class
-│   ├── schemas.py          # Pydantic models
-│   ├── image_utils.py      # Image helpers
-│   ├── video_utils.py      # Video generation
-│   └── output_writer.py    # File output
-├── src/                     # ⚠️ CUSTOMIZE: Your task logic
-│   ├── generator.py        # Your task generator
-│   ├── prompts.py          # Your prompt templates
-│   └── config.py           # Your configuration
-├── examples/
-│   └── generate.py         # Entry point
-└── data/questions/         # Generated output
+### Generate Tasks
+```bash
+python examples/generate.py --num-samples 10 --output data/my_tasks
 ```
 
----
+### Configuration
+Edit `src/config.py` to customize:
+- Image dimensions (default: 800×400)
+- Shape sizes and margins
+- Video frame rates
+- Output settings
 
-## 📦 Output Format
+## 📁 Output Structure
 
-Every generator produces:
-
+Each generated task includes:
 ```
-data/questions/{domain}_task/{task_id}/
-├── first_frame.png          # Initial state (REQUIRED)
-├── final_frame.png          # Goal state (or goal.txt)
-├── prompt.txt               # Instructions (REQUIRED)
-└── ground_truth.mp4         # Solution video (OPTIONAL)
+task_id/
+├── prompt.txt           # Task instruction
+└── ground_truth.mp4     # Animated solution showing both steps
 ```
 
----
+## 🎬 Video Animation Sequence
 
-## 🎨 Customization (3 Files to Modify)
+1. **Initial State**: Shows A→B→C :: D→?→? layout
+2. **Step 1 Animation**: First ? reveals with fill-to-outline transformation
+3. **Step 2 Animation**: Second ? reveals with vertical movement  
+4. **Final State**: Complete sequence A→B→C :: D→E→F
 
-### 1. Update `src/generator.py`
+## 🔧 Customization
 
-Replace the example chess generator with your task:
-
+### Adding New Movement Patterns
+Modify `movements` in `src/generator.py`:
 ```python
-from core import BaseGenerator, TaskPair, ImageRenderer
-
-class MazeGenerator(BaseGenerator):
-    def __init__(self, config):
-        super().__init__(config)
-        self.renderer = ImageRenderer(config.image_size)
-    
-    def generate_task_pair(self, task_id: str) -> TaskPair:
-        # 1. Generate your problem
-        maze = self.create_maze()
-        
-        # 2. Solve it
-        solution = self.solve_maze(maze)
-        
-        # 3. Render images
-        first_image = self.render_maze(maze)
-        final_image = self.render_maze_with_solution(maze, solution)
-        
-        # 4. Create TaskPair
-        return TaskPair(
-            task_id=task_id,
-            domain=self.config.domain,
-            prompt=self.select_prompt(),
-            first_image=first_image,
-            final_image=final_image,
-            ground_truth_video=None  # Optional
-        )
-```
-
-### 2. Update `src/prompts.py`
-
-Replace chess prompts with yours:
-
-```python
-PROMPTS = {
-    "default": [
-        "Animate a path from start to goal through the maze.",
-        "Show the solution route navigating through corridors.",
-    ]
+self.movements = {
+    "up": -60,          # Move up by 60 pixels
+    "down": 60,         # Move down by 60 pixels
+    "up_small": -40,    # Move up by 40 pixels
+    # Add your movements...
 }
-
-def get_prompt(task_type: str = "default") -> str:
-    prompts = PROMPTS.get(task_type, PROMPTS["default"])
-    return random.choice(prompts)
 ```
 
-### 3. Update `src/config.py`
-
-**All hyperparameters go here** - both general and task-specific:
-
+### Adjusting Movement Distances
+Update movement pixel values:
 ```python
-from core import GenerationConfig
-from pydantic import Field
-
-class TaskConfig(GenerationConfig):
-    """Your task-specific configuration."""
-    # Inherits: num_samples, domain, seed, output_dir, image_size
-    
-    # Override defaults
-    domain: str = Field(default="maze")
-    image_size: tuple[int, int] = Field(default=(512, 512))
-    
-    # Task-specific hyperparameters
-    grid_size: int = Field(default=10, description="Maze grid size")
-    wall_thickness: int = Field(default=2, description="Wall thickness")
-    difficulty: str = Field(default="medium", description="easy/medium/hard")
+self.valid_transformations = [
+    ("filled", "outline", "center", "up"),      # Fill-to-outline + move up
+    ("filled", "outline", "center", "down"),    # Fill-to-outline + move down
+    # Add your combinations...
+]
 ```
 
-**Single entry point:** `python examples/generate.py --num-samples 50`
+## 🧠 Cognitive Challenge
+
+This task type tests:
+- **Sequential Reasoning**: Understanding multi-step transformation patterns
+- **Style Recognition**: Distinguishing filled vs outline-only shapes
+- **Spatial Awareness**: Recognizing vertical movement patterns and distances
+- **Analogical Thinking**: Applying learned patterns to new shapes
+
+## 📊 Task Complexity
+
+- **Transformation Steps**: 2 (fill-to-outline then vertical movement)
+- **Shape Variations**: 10 different shapes
+- **Movement Options**: 6 different vertical movements
+- **Style Transformation**: Always filled → outline
+- **Total Unique Tasks**: 10 × 10 × 6 = 600 possible combinations
+
+## 🎯 Use Cases
+
+- **Visual Reasoning Research**: Multi-step transformation understanding
+- **AI Training Data**: Sequential pattern recognition tasks
+- **Cognitive Assessment**: Two-step analogical reasoning evaluation
+- **Educational Tools**: Teaching sequential logical thinking with spatial elements
+
+## 🔍 Example Task
+
+**Visual Layout:**
+```
+filled_circle → outline_circle → outline_circle_moved_up
+filled_square →       ?        →           ?
+```
+
+**Solution:**
+- First ?: outline_square (apply fill-to-outline change)
+- Second ?: outline_square_moved_up (apply same vertical movement)
+
+**Reasoning:** The pattern shows style change first (filled→outline), then position change (center→up). Apply the same sequence to the square.
+
+## 🎨 Visual Transformation Details
+
+### Step 1: Fill-to-Outline Transformation
+- **Phase 1**: Gradual fill opacity reduction (first 12 frames)
+- **Phase 2**: Complete fill removal, outline emphasis (remaining 13 frames)
+- **Border Enhancement**: Outline width increases from 2px to 3px
+- **Visual Clarity**: Clear distinction between filled and outline states
+
+### Step 2: Vertical Movement
+- **Small Movement**: ±40 pixels (subtle but noticeable displacement)
+- **Medium Movement**: ±60 pixels (clear positional change)
+- **Large Movement**: ±80 pixels (dramatic positional shift)
+- **Smooth Animation**: Gradual position interpolation over 25 frames
+- **Direction Consistency**: Up movements are negative Y, down movements are positive Y
+
+## 🔬 Research Applications
+
+- **Spatial Cognition**: Understanding how humans process position changes
+- **Sequential Processing**: Investigating multi-step visual reasoning
+- **AI Pattern Recognition**: Training models on style and spatial transformations
+- **Educational Assessment**: Measuring analogical reasoning with spatial elements
+- **Perceptual Studies**: Investigating style change and movement detection
+
+## 💡 Design Philosophy
+
+This generator focuses on **intuitive transformations** that are:
+- **Easy to Understand**: Fill-to-outline is a clear visual change
+- **Spatially Clear**: Vertical movement is unambiguous
+- **Cognitively Engaging**: Requires attention to both style and position
+- **Visually Distinct**: Large enough movements to be easily perceived
+
+## 🎓 Educational Value
+
+Perfect for teaching:
+- **Sequential Thinking**: Step-by-step problem solving
+- **Pattern Recognition**: Identifying consistent transformation rules
+- **Spatial Reasoning**: Understanding position and movement
+- **Visual Analysis**: Distinguishing style and spatial changes
+
+---
+
+Built with the Template Data Generator framework for creating high-quality visual reasoning datasets.
